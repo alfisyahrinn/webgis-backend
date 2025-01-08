@@ -2,7 +2,9 @@ const express = require('express');
 const { Pool } = require('pg');
 const app = express();
 const cors = require('cors')
+const authenticate = require('./middleware/authenticate.js')
 
+// app.use(authenticate)
 app.use(cors())
 app.use(express.json())
 const pool = new Pool({
@@ -22,7 +24,7 @@ app.get('/', (req, res) => {
 app.get('/api/cagar', async (req, res) => {
     try {
         const result = await pool.query(
-            "SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, ST_AsGeoJSON(geom)::json AS geometry FROM cagar_aceh"
+            "SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, ST_AsGeoJSON(geom)::json AS geometry FROM cagar_aceh"
         );
         const geojson = {
             type: "FeatureCollection",
@@ -35,6 +37,7 @@ app.get('/api/cagar', async (req, res) => {
                     deskripsi: row.deskripsi,
                     district: row.district,
                     provinsi: row.provinsi,
+                    status: row.status,
                 },
                 geometry: row.geometry
             }))
@@ -45,6 +48,39 @@ app.get('/api/cagar', async (req, res) => {
         res.status(500).send('Error fetching data');
     }
 });
+
+app.get('/api/cagar/:id', async (req, res) => {
+    const { id } = req.params; 
+    try {
+        const result = await pool.query(
+            `SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, ST_AsGeoJSON(geom)::json AS geometry FROM cagar_aceh WHERE gid = ${id}`,
+        );
+
+        if (result.rows.length === 0) {
+            return res.status(404).send('Data not found');
+        }
+
+        const feature = {
+            type: "Feature",
+            properties: {
+                gid: result.rows[0].gid,
+                name: result.rows[0].nm_objekcb,
+                kategori: result.rows[0].nm_kategor,
+                deskripsi: result.rows[0].deskripsi,
+                district: result.rows[0].district,
+                provinsi: result.rows[0].provinsi,
+                status: result.rows[0].status,
+            },
+            geometry: result.rows[0].geometry,
+        };
+
+        res.json(feature);
+    } catch (err) {
+        console.error(err);
+        res.status(500).send('Error fetching data');
+    }
+});
+
 
 app.post('/api/cagar', async (req, res) => {
     const {
@@ -72,10 +108,11 @@ app.post('/api/cagar', async (req, res) => {
                 province, 
                 objectid, 
                 provinsi,
-                geom
+                geom,
+                status
             ) 
             VALUES ('${nm_objekcb}', '${nm_kategor}', '${slug_kateg}', '${deskripsi}', '${district}', '${province}', ${objectid}, '${provinsi}',
-                    ST_GeomFromText('POINT(${longitude} ${latitude})', 4326)) `,
+                    ST_GeomFromText('POINT(${longitude} ${latitude})', 4326), 0) `,
         );
         console.log("result", result)
         res.status(201).json({
@@ -89,26 +126,6 @@ app.post('/api/cagar', async (req, res) => {
 });
 
 
-
-app.get('/api/buildings', async (req, res) => {
-    try {
-        const result = await pool.query(
-            "SELECT gid, name, pendidikan, ST_AsGeoJSON(geom)::json AS geometry FROM building"
-        );
-        const geojson = {
-            type: "FeatureCollection",
-            features: result.rows.map(row => ({
-                type: "Feature",
-                properties: { gid: row.gid, name: row.name, pendidikan: row.pendidikan },
-                geometry: row.geometry
-            }))
-        };
-        res.json(geojson);
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Error fetching data');
-    }
-});
 
 
 app.listen(3000, () => {
