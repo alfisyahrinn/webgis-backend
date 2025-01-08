@@ -50,7 +50,7 @@ app.get('/api/cagar', async (req, res) => {
 });
 
 app.get('/api/cagar/:id', async (req, res) => {
-    const { id } = req.params; 
+    const { id } = req.params;
     try {
         const result = await pool.query(
             `SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, ST_AsGeoJSON(geom)::json AS geometry FROM cagar_aceh WHERE gid = ${id}`,
@@ -93,7 +93,7 @@ app.post('/api/cagar', async (req, res) => {
         objectid,
         provinsi,
         longitude,
-        latitude   
+        latitude
     } = req.body;
     console.log(req.body)
 
@@ -117,13 +117,56 @@ app.post('/api/cagar', async (req, res) => {
         console.log("result", result)
         res.status(201).json({
             message: 'Data successfully inserted',
-            data: req.body  
+            data: req.body
         });
     } catch (err) {
         console.error('Error inserting data:', err);
         res.status(500).json({ error: 'Failed to insert data' });
     }
 });
+
+app.delete('/api/cagar/:id', async (req, res) => {
+    const { id } = req.params;
+    try {
+        const result = await pool.query(`DELETE FROM cagar_aceh WHERE gid = ${id}`);
+        if (result.rowCount > 0) {
+            res.status(200).send('Item deleted successfully');
+        } else {
+            res.status(404).send('Item not found');
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error deleting item');
+    }
+});
+
+app.put('/api/cagar/status/:id', async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    try {
+        console.log('ID:', id, 'Status:', status);
+        const result = await pool.query(
+            `UPDATE cagar_aceh
+             SET 
+            status = ${status}
+            WHERE gid = ${id}`
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Data not found or no changes made' });
+        }
+
+        // Respon sukses
+        res.status(200).json({
+            message: 'Data successfully updated',
+            data: result.rows[0],
+        });
+    } catch (err) {
+        console.error('Error updating data:', err);
+        res.status(500).json({ error: 'Failed to update data' });
+    }
+});
+
 
 
 
