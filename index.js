@@ -10,7 +10,7 @@ app.use(express.json())
 const pool = new Pool({
     user: 'postgres',
     host: 'localhost',
-    database: 'webgis',
+    database: 'testing',
     password: 'root',
     port: 5432,
 });
@@ -24,7 +24,7 @@ app.get('/', (req, res) => {
 app.get('/api/cagar', async (req, res) => {
     try {
         const result = await pool.query(
-            "SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, ST_AsGeoJSON(geom)::json AS geometry FROM cagar_aceh"
+            "SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, shape_leng, shape_area FROM cagar_aceh"
         );
         const geojson = {
             type: "FeatureCollection",
@@ -38,8 +38,9 @@ app.get('/api/cagar', async (req, res) => {
                     district: row.district,
                     provinsi: row.provinsi,
                     status: row.status,
+                    shape_leng : row.shape_leng, 
+                    shape_area : row.shape_area
                 },
-                geometry: row.geometry
             }))
         };
         res.json(geojson);
@@ -53,7 +54,7 @@ app.get('/api/cagar/:id', async (req, res) => {
     const { id } = req.params;
     try {
         const result = await pool.query(
-            `SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, ST_AsGeoJSON(geom)::json AS geometry FROM cagar_aceh WHERE gid = ${id}`,
+            `SELECT gid, nm_objekcb, nm_kategor, deskripsi, district, provinsi, status, shape_leng, shape_area FROM cagar_aceh WHERE gid = ${id}`,
         );
 
         if (result.rows.length === 0) {
@@ -70,8 +71,9 @@ app.get('/api/cagar/:id', async (req, res) => {
                 district: result.rows[0].district,
                 provinsi: result.rows[0].provinsi,
                 status: result.rows[0].status,
+                shape_area: result.rows[0].shape_area,
+                shape_leng: result.rows[0].shape_leng,
             },
-            geometry: result.rows[0].geometry,
         };
 
         res.json(feature);
