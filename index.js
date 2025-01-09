@@ -7,13 +7,22 @@ const authenticate = require('./middleware/authenticate.js')
 // app.use(authenticate)
 app.use(cors())
 app.use(express.json())
-const pool = new Pool({
+const development = {
     user: 'postgres',
     host: 'localhost',
     database: 'testing',
     password: 'root',
     port: 5432,
-});
+}
+const production = {
+    user: 'postgres',
+    host: 'viaduct.proxy.rlwy.net',
+    database: 'railway',
+    password: 'UrOUELJsbmdAhCOHQNyOGYCtNiCnhGfR',
+    port: 28356,
+};
+
+const pool = new Pool(production);
 
 app.get('/', (req, res) => {
     return res.json({
@@ -38,8 +47,8 @@ app.get('/api/cagar', async (req, res) => {
                     district: row.district,
                     provinsi: row.provinsi,
                     status: row.status,
-                    shape_leng : row.shape_leng, 
-                    shape_area : row.shape_area
+                    shape_leng: row.shape_leng,
+                    shape_area: row.shape_area
                 },
             }))
         };
