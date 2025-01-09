@@ -140,6 +140,44 @@ app.delete('/api/cagar/:id', async (req, res) => {
     }
 });
 
+app.put('/api/cagar/:id', async (req, res) => {
+    const { id } = req.params;
+    const {
+        nm_objekcb,
+        nm_kategor,
+        slug_kateg,
+        deskripsi,
+        district,
+        province,
+    } = req.body;
+
+    try {
+        console.log('ID:', id);
+        const result = await pool.query(
+            `UPDATE cagar_aceh
+             SET 
+            nm_objekcb = '${nm_objekcb}',
+            nm_kategor = '${nm_kategor}',
+            slug_kateg = '${slug_kateg}',
+            deskripsi = '${deskripsi}',
+            district = '${district}',
+            province = '${province}'
+            WHERE gid = ${id}`
+        );
+        if (result.rowCount === 0) {
+            return res.status(404).json({ error: 'Data not found or no changes made' });
+        }
+
+        // Respon sukses
+        res.status(200).json({
+            message: 'Data successfully updated',
+            data: result.rows[0],
+        });
+    } catch (err) {
+        console.error('Error updating data:', err);
+        res.status(500).json({ error: 'Failed to update data' });
+    }
+});
 app.put('/api/cagar/status/:id', async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
