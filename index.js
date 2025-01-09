@@ -22,7 +22,7 @@ const production = {
     port: 28356,
 };
 
-const pool = new Pool(development);
+const pool = new Pool(production);
 
 app.get('/', (req, res) => {
     return res.json({
