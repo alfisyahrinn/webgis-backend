@@ -22,7 +22,7 @@ const production = {
     port: 28356,
 };
 
-const pool = new Pool(production);
+const pool = new Pool(development);
 
 app.get('/', (req, res) => {
     return res.json({
@@ -103,8 +103,8 @@ app.post('/api/cagar', async (req, res) => {
         province,
         objectid,
         provinsi,
-        longitude,
-        latitude
+        shape_area,
+        shape_leng
     } = req.body;
     console.log(req.body)
 
@@ -117,13 +117,12 @@ app.post('/api/cagar', async (req, res) => {
                 deskripsi, 
                 district, 
                 province, 
-                objectid, 
                 provinsi,
-                geom,
+                shape_leng, 
+                shape_area,
                 status
             ) 
-            VALUES ('${nm_objekcb}', '${nm_kategor}', '${slug_kateg}', '${deskripsi}', '${district}', '${province}', ${objectid}, '${provinsi}',
-                    ST_GeomFromText('POINT(${longitude} ${latitude})', 4326), 0) `,
+            VALUES ('${nm_objekcb}', '${nm_kategor}', '${slug_kateg}', '${deskripsi}', '${district}', '${province}','${provinsi}',${shape_leng},${shape_area}, 0) `,
         );
         console.log("result", result)
         res.status(201).json({
